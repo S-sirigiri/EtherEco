@@ -3,17 +3,11 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
-
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <mqueue.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #define MAX_SIZE 1024
 
-mqd_t mq;
 
 int interprocess_shared_memory_send(const char *name, const char *message){
 
@@ -76,9 +70,9 @@ int interprocess_shared_memory_receive(const char *name, char *message)
 }
 
 
-int interprocess_open_message_queue(char * queue_name)
+mqd_t interprocess_open_message_queue(char * queue_name)
 {
-
+    mqd_t mq;
 
     struct mq_attr attr;
     attr.mq_flags = 0;
@@ -93,15 +87,26 @@ int interprocess_open_message_queue(char * queue_name)
         perror("mq open failed");
         return -1;
     }
-    return 0;
+    return mq;
 }
 
-int interprocess_message_queue_send(char *buffer)
+int interprocess_message_queue_send(mqd_t mq, char *buffer)
 {
+    /* send the message */
     if (0 > mq_send(mq, buffer, strlen(buffer), 0))
     {
-        perror("mq_send");
-        exit(1);
+        perror("mq send failed");
+        return -1;
     }
+    else
+    {
+        return 0;
+    }
+}
+
+void interprocess_message_queue_cleanup(mqd_t mq, char *queue_name)
+{
+    mq_close(mq);
+    mq_unlink(queue_name);
 }
 
