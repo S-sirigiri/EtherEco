@@ -90,8 +90,6 @@ void *client_handler(void *arg) {
     while ( transact_recv_send_map_reduce(client_socket, strcmp_wrapper, "HELO", "WHO", "403") <= 0 );
     //receiving client username and sending AUTH
     while ( transact_recv_send_map_reduce(client_socket, find_username_from_database, client_username, "AUTH", "101") <= 0 );
-    //set the user as online
-    set_online(client_username, client_socket);
     //receiving password and sending TO
     while ( transact_recv_send_map_reduce(client_socket, authenticate_user_from_database, client_username, "TO", "102") <= 0 );
     //receiving recipient username and sending DATA
@@ -110,6 +108,9 @@ void *client_handler(void *arg) {
     {
         while ( transact_send_recv_map_reduce(client_socket, strcmp_wrapper, "OK", PQgetvalue(buffer_messages, iter, 0), "202") <= 0 );
     }
+
+    //set the user as online
+    set_online(client_username, client_socket);
 
     //client to client transaction
     while(1)
