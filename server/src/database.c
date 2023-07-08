@@ -106,12 +106,13 @@ PGresult *get_buffer_messages(char *client_username, char *rcpt_username)
 
     char query[MAX_QUERY_SIZE];
     sprintf(query, "SELECT messages"
-                   "FROM buffer_messages "
-                   "WHERE username = '%s' AND rcpt_username = '%s'", client_username, rcpt_username);
+                   "FROM buffer_messages"
+                   "WHERE username = '%s'"
+                   "ORDER BY rcpt_username", client_username);
     PGresult *res = PQexec(conn, query);
 
     sprintf(query, "DELETE FROM buffer_messages"
-                   "WHERE username = '%s' AND rcpt_username = '%s'", client_username, rcpt_username);
+                   "WHERE username = '%s'", client_username);
     PQexec(conn, query);
 
     return res;
@@ -134,3 +135,4 @@ void add_buffer_message(char *client_username, char *rcpt_username, char *messag
 
     return;
 }
+

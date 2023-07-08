@@ -1,14 +1,5 @@
-#include <iostream>
-#include <cstring>
-#include <thread>
-
-
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <string.h>
-
-#define BUFLEN 1024
-
+#include "client.hpp"
+#include "fileIO.hpp"
 
 /*
  * Class: SendReceive
@@ -131,7 +122,18 @@ protected:
                 break;
             }
             buffer[received] = '\0';
-            std::cout << "Data received: " << buffer << std::endl;
+
+            char sentUsername[50];
+            sscanf(buffer, "<%[^>]>: %*s", sentUsername);
+            if (!strcmp(sentUsername,this->rcptUsername))
+            {
+                std::cout << buffer << std::endl;
+                FileIO::writeToFile(sentUsername, buffer);
+            }
+            else
+            {
+                FileIO::writeToFile(sentUsername, buffer);
+            }
         }
     }
 
@@ -145,8 +147,9 @@ protected:
         char buffer[BUFLEN];
         while(true)
         {
-            std::cout << "Enter message to send: ";
+            std::cout << "<" << this->username << ">: ";
             std::cin.getline(buffer, BUFLEN);
+            sprintf(buffer, "<%s>: %s", this->username, buffer);
             if (send(this->sock, buffer, strlen(buffer), 0) < 0)
             {
                 std::cerr << "Failed to send the message" << std::endl;
@@ -168,14 +171,12 @@ public:
         strcpy(this->username, username);
         strcpy(this->rcptUsername, rcptUsername);
         strcpy(this->password, password);
-        //read the previous chat
-        FileIO::readFile(this->rcptUsername);
     }
 
     /*
      * Method to perform the handshake
      * Arguments: None
-     * Returns: void
+     * Returns: true if handshake was successful
      */
     bool handshakeTransaction()
     {
@@ -222,13 +223,57 @@ public:
         memset(buffer, '\0', BUFLEN);
         bytesReceived = this->receiveDataOnce(buffer);
         buffer[bytesReceived] = '\0';
-        if(strcmp(buffer, "TO"))
+        if(strcmp(buffer, "DATA"))
         {
             std::cerr << "Failed to receive valid command from server" << std::endl;
             return false;
         }
 
+    }
 
+    /*
+     * Method to get all the buffer messages
+     * Arguments: None
+     * Returns: void
+     */
+    bool fetchBufferMessages()
+    {
+        int bytesReceived = 0;
+
+        char OK[3] = "OK";
+        char buffer[BUFLEN];
+        memset(buffer, '\0', BUFLEN);
+
+        bytesReceived = this->receiveDataOnce(buffer);
+        buffer[bytesReceived] = '\0';
+        this->sendDataOnce(OK);
+        std::istringstream iss(buffer);
+        int numMessages = 0;
+        iss >> numMessages;
+
+        std::string bufferMessages = "";
+        char last[50];
+        for (int iter=0; iter < numMessages; iter++)
+        {
+            bytesReceived = receiveDataOnce(buffer);
+            buffer[bytesReceived] = '\0';
+
+            char rcptfilename[50];
+            sscanf(buffer, "<%[^>]>: %*s", rcptfilename);
+            if (iter != 0)
+            {
+                if (strcmp(last, rcptfilename))
+                {
+                    FileIO::writeToFile(this->rcptUsername, bufferMessages);
+                }
+            }
+            strcpy(last, rcptfilename);
+
+            bufferMessages += buffer;
+            bufferMessages += '\n';
+            this->sendDataOnce(OK);
+        }
+        return true;
     }
 
     int threadHandler()

@@ -1,10 +1,4 @@
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-
-#include <string.h>
-
-namespace fs = std::filesystem;
+#include "fileIO.hpp"
 
 /*
  * Class FileIO
@@ -58,6 +52,22 @@ public:
         if (!content.empty())
         {
             std::cout << content << std::endl;
+        }
+    }
+
+    static void writeToFile(const char* filename, const std::string& content)
+    {
+        std::string path = "chats/";
+        path += filename;
+        std::ofstream file(path, std::ios::app); // Open the file in append mode
+        if (file.is_open())
+        {
+            file << content; // Write the string to the file
+            file.close();
+        }
+        else
+        {
+            std::cerr << "Failed to open file: " << path << std::endl;
         }
     }
 };
