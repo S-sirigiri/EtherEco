@@ -2,290 +2,272 @@
 #include "fileIO.hpp"
 
 /*
- * Class: SendReceive
- * Encapsulates methods and attributes to handle socket programing
+ * Class constructor
+ * Creates the socket and connects to the server
  */
-class SendReceive
+SendReceive::SendReceive(char *server_ip, int port)
 {
-protected:
-    //socket id
-    int sock;
-    //socket attributes
-    struct sockaddr_in server;
-
-
-public:
-    /*
-     * Class constructor
-     * Creates the socket and connects to the server
-     */
-    SendReceive(char *server_ip, int port)
+    // Create socket
+    this->sock = socket(AF_INET , SOCK_STREAM , 0);
+    if (this->sock == -1)
     {
-        // Create socket
-        this->sock = socket(AF_INET , SOCK_STREAM , 0);
-        if (this->sock == -1)
-        {
-            std::cerr << "Could not create socket" << std::endl;
-            throw std::runtime_error("Failed to create socket");
-        }
-
-        this->server.sin_addr.s_addr = inet_addr(server_ip);
-        this->server.sin_family = AF_INET;
-        this->server.sin_port = htons(port);
-
-        // Connect to remote server
-        if (connect(this->sock, (struct sockaddr *)&server , sizeof(this->server)) < 0)
-        {
-            std::cerr << "Connect failed" << std::endl;
-            throw std::runtime_error("Failed to connect to server");
-        }
-
-        std::cout << "Connected to server" << std::endl;
+        std::cerr << "Could not create socket" << std::endl;
+        throw std::runtime_error("Failed to create socket");
     }
 
-    /*
-     * Class destroyer
-     * Closes the socket
-     */
-    ~SendReceive()
+    this->server.sin_addr.s_addr = inet_addr(server_ip);
+    this->server.sin_family = AF_INET;
+    this->server.sin_port = htons(port);
+
+    // Connect to remote server
+    if (connect(this->sock, (struct sockaddr *)&server , sizeof(this->server)) < 0)
     {
-        close(this->sock);
+        std::cerr << "Connect failed" << std::endl;
+        throw std::runtime_error("Failed to connect to server");
     }
 
-    /*
-     * Method to handle receiving data
-     * Arguments: string to store the received string
-     * Returns: the number of bytes received
-     */
-    int receiveDataOnce(char *data)
-    {
+    std::cout << "Connected to server" << std::endl;
+}
 
-        char buffer[BUFLEN];
+/*
+ * Class destroyer
+ * Closes the socket
+ */
+SendReceive::~SendReceive()
+{
+    close(this->sock);
+}
+
+/*
+ * Method to handle receiving data
+ * Arguments: string to store the received string
+ * Returns: the number of bytes received
+ */
+int SendReceive::receiveDataOnce(char *data)
+{
+
+    char buffer[BUFLEN];
+    memset(buffer, 0, BUFLEN);
+    //receive data
+    ssize_t received = recv(this->sock, buffer, BUFLEN - 1, 0);
+    if (received <= 0)
+    {
+        std::cerr << "Failed to receive or connection closed by server" << std::endl;
+        return received;
+    }
+    buffer[received] = '\0';
+    strcpy(data, buffer);
+    return received;
+}
+
+/*
+ * Method to handle sending data
+ * Arguments: the string to be sent
+ * Returns: int -> the number of bytes sent
+ */
+int SendReceive::sendDataOnce(char* buffer)
+{
+    int sent_bytes = send(this->sock, buffer, strlen(buffer), 0);
+    if (sent_bytes < 0)
+    {
+        std::cerr << "Failed to send the message" << std::endl;
+        exit(-1);
+    }
+    return sent_bytes;
+}
+
+
+
+/*
+ * Class constructor
+ */
+ClientTransaction::ClientTransaction(char *server_ip, int port,
+                                     char* username, char* password, char* rcptUsername) : SendReceive(server_ip, port)
+{
+    //create the directory where all the chats are stored
+    FileIO::createDirectoryIfNotExists("chats");
+    strcpy(this->username, username);
+    strcpy(this->rcptUsername, rcptUsername);
+    strcpy(this->password, password);
+}
+
+/* Method: receiveData
+ * Thread function to handle receiving data
+ * Arguments: None
+ * Returns: None
+ */
+void ClientTransaction::receiveData()
+{
+    char buffer[BUFLEN];
+    while(true)
+    {
         memset(buffer, 0, BUFLEN);
-        //receive data
         ssize_t received = recv(this->sock, buffer, BUFLEN - 1, 0);
         if (received <= 0)
         {
             std::cerr << "Failed to receive or connection closed by server" << std::endl;
-            return received;
+            break;
         }
         buffer[received] = '\0';
-        strcpy(data, buffer);
-        return received;
-    }
 
-    /*
-     * Method to handle sending data
-     * Arguments: the string to be sent
-     * Returns: int -> the number of bytes sent
-     */
-    int sendDataOnce(char* buffer)
+        char sentUsername[50];
+        sscanf(buffer, "<%[^>]>: %*s", sentUsername);
+        if (!strcmp(sentUsername,this->rcptUsername))
+        {
+            std::cout << buffer << std::endl;
+            FileIO::writeToFile(sentUsername, buffer);
+        }
+        else
+        {
+            FileIO::writeToFile(sentUsername, buffer);
+        }
+    }
+}
+
+/* Method: sendData
+ * Thread function to handle sending data
+ * Arguments: None
+ * Returns: None
+ */
+void ClientTransaction::sendData()
+{
+    char buffer[BUFLEN];
+    while(true)
     {
-        int sent_bytes = send(this->sock, buffer, strlen(buffer), 0);
-        if (sent_bytes < 0)
+        std::cout << "<" << this->username << ">: ";
+        std::cin.getline(buffer, BUFLEN);
+        sprintf(buffer, "<%s>: %s", this->username, buffer);
+        if (send(this->sock, buffer, strlen(buffer), 0) < 0)
         {
             std::cerr << "Failed to send the message" << std::endl;
-            exit(-1);
+            break;
         }
-        return sent_bytes;
     }
-};
+}
 
 
 /*
- * Class: ClientTransaction
- * Encapsulates methods and attributes to facilitate all the client transactions
+ * Method to perform the handshake
+ * Arguments: None
+ * Returns: true if handshake was successful
  */
-class ClientTransaction : public SendReceive
+bool ClientTransaction::handshakeTransaction()
 {
-private:
-    char* rcptUsername;
-    char* username;
-    char* password;
+    int bytesReceived = 0;
 
-protected:
-    /* Method: receiveData
-     * Thread function to handle receiving data
-     * Arguments: None
-     * Returns: None
-     */
-    void receiveData()
+    char buffer[BUFLEN];
+    memset(buffer, '\0', BUFLEN);
+    strcpy(buffer, "HELO");
+    this->sendDataOnce(buffer);
+
+    memset(buffer, '\0', BUFLEN);
+    bytesReceived = this->receiveDataOnce(buffer);
+    buffer[bytesReceived] = '\0';
+    if(strcmp(buffer, "WHO"))
     {
-        char buffer[BUFLEN];
-        while(true)
-        {
-            memset(buffer, 0, BUFLEN);
-            ssize_t received = recv(this->sock, buffer, BUFLEN - 1, 0);
-            if (received <= 0)
-            {
-                std::cerr << "Failed to receive or connection closed by server" << std::endl;
-                break;
-            }
-            buffer[received] = '\0';
-
-            char sentUsername[50];
-            sscanf(buffer, "<%[^>]>: %*s", sentUsername);
-            if (!strcmp(sentUsername,this->rcptUsername))
-            {
-                std::cout << buffer << std::endl;
-                FileIO::writeToFile(sentUsername, buffer);
-            }
-            else
-            {
-                FileIO::writeToFile(sentUsername, buffer);
-            }
-        }
+        std::cerr << "Failed to receive valid command from server" << std::endl;
+        return false;
     }
 
-    /* Method: sendData
-     * Thread function to handle sending data
-     * Arguments: None
-     * Returns: None
-     */
-    void sendData()
+    this->sendDataOnce(this->username);
+
+    memset(buffer, '\0', BUFLEN);
+    bytesReceived = this->receiveDataOnce(buffer);
+    buffer[bytesReceived] = '\0';
+    if(strcmp(buffer, "AUTH"))
     {
-        char buffer[BUFLEN];
-        while(true)
+        std::cerr << "Failed to receive valid command from server" << std::endl;
+        return false;
+    }
+
+    this->sendDataOnce(this->password);
+
+    memset(buffer, '\0', BUFLEN);
+    bytesReceived = this->receiveDataOnce(buffer);
+    buffer[bytesReceived] = '\0';
+    if(strcmp(buffer, "TO"))
+    {
+        std::cerr << "Failed to receive valid command from server" << std::endl;
+        return false;
+    }
+
+    this->sendDataOnce(this->rcptUsername);
+
+    memset(buffer, '\0', BUFLEN);
+    bytesReceived = this->receiveDataOnce(buffer);
+    buffer[bytesReceived] = '\0';
+    if(strcmp(buffer, "DATA"))
+    {
+        std::cerr << "Failed to receive valid command from server" << std::endl;
+        return false;
+    }
+
+    return true;
+
+}
+
+/*
+ * Method to get all the buffer messages
+ * Arguments: None
+ * Returns: void
+ */
+bool ClientTransaction::fetchBufferMessages()
+{
+    int bytesReceived = 0;
+
+    char OK[3] = "OK";
+    char buffer[BUFLEN];
+    memset(buffer, '\0', BUFLEN);
+
+    bytesReceived = this->receiveDataOnce(buffer);
+    buffer[bytesReceived] = '\0';
+    this->sendDataOnce(OK);
+    std::istringstream iss(buffer);
+    int numMessages = 0;
+    iss >> numMessages;
+
+    std::string bufferMessages = "";
+    char last[50];
+    for (int iter=0; iter < numMessages; iter++)
+    {
+        bytesReceived = receiveDataOnce(buffer);
+        buffer[bytesReceived] = '\0';
+
+        char rcptfilename[50];
+        sscanf(buffer, "<%[^>]>: %*s", rcptfilename);
+        if (iter != 0)
         {
-            std::cout << "<" << this->username << ">: ";
-            std::cin.getline(buffer, BUFLEN);
-            sprintf(buffer, "<%s>: %s", this->username, buffer);
-            if (send(this->sock, buffer, strlen(buffer), 0) < 0)
+            if (strcmp(last, rcptfilename))
             {
-                std::cerr << "Failed to send the message" << std::endl;
-                break;
+                FileIO::writeToFile(this->rcptUsername, bufferMessages);
             }
         }
-    }
+        strcpy(last, rcptfilename);
 
-public:
-
-    /*
-     * Class constructor
-     */
-    ClientTransaction(char *server_ip, int port,
-                      char* username, char* password, char* rcptUsername) : SendReceive(server_ip, port)
-    {
-        //create the directory where all the chats are stored
-        FileIO::createDirectoryIfNotExists("chats");
-        strcpy(this->username, username);
-        strcpy(this->rcptUsername, rcptUsername);
-        strcpy(this->password, password);
-    }
-
-    /*
-     * Method to perform the handshake
-     * Arguments: None
-     * Returns: true if handshake was successful
-     */
-    bool handshakeTransaction()
-    {
-        int bytesReceived = 0;
-
-        char buffer[BUFLEN];
-        memset(buffer, '\0', BUFLEN);
-        strcpy(buffer, "HELO");
-        this->sendDataOnce(buffer);
-
-        memset(buffer, '\0', BUFLEN);
-        bytesReceived = this->receiveDataOnce(buffer);
-        buffer[bytesReceived] = '\0';
-        if(strcmp(buffer, "WHO"))
-        {
-            std::cerr << "Failed to receive valid command from server" << std::endl;
-            return false;
-        }
-
-        this->sendDataOnce(this->username);
-
-        memset(buffer, '\0', BUFLEN);
-        bytesReceived = this->receiveDataOnce(buffer);
-        buffer[bytesReceived] = '\0';
-        if(strcmp(buffer, "AUTH"))
-        {
-            std::cerr << "Failed to receive valid command from server" << std::endl;
-            return false;
-        }
-
-        this->sendDataOnce(this->password);
-
-        memset(buffer, '\0', BUFLEN);
-        bytesReceived = this->receiveDataOnce(buffer);
-        buffer[bytesReceived] = '\0';
-        if(strcmp(buffer, "TO"))
-        {
-            std::cerr << "Failed to receive valid command from server" << std::endl;
-            return false;
-        }
-
-        this->sendDataOnce(this->rcptUsername);
-
-        memset(buffer, '\0', BUFLEN);
-        bytesReceived = this->receiveDataOnce(buffer);
-        buffer[bytesReceived] = '\0';
-        if(strcmp(buffer, "DATA"))
-        {
-            std::cerr << "Failed to receive valid command from server" << std::endl;
-            return false;
-        }
-
-    }
-
-    /*
-     * Method to get all the buffer messages
-     * Arguments: None
-     * Returns: void
-     */
-    bool fetchBufferMessages()
-    {
-        int bytesReceived = 0;
-
-        char OK[3] = "OK";
-        char buffer[BUFLEN];
-        memset(buffer, '\0', BUFLEN);
-
-        bytesReceived = this->receiveDataOnce(buffer);
-        buffer[bytesReceived] = '\0';
+        bufferMessages += buffer;
+        bufferMessages += '\n';
         this->sendDataOnce(OK);
-        std::istringstream iss(buffer);
-        int numMessages = 0;
-        iss >> numMessages;
-
-        std::string bufferMessages = "";
-        char last[50];
-        for (int iter=0; iter < numMessages; iter++)
-        {
-            bytesReceived = receiveDataOnce(buffer);
-            buffer[bytesReceived] = '\0';
-
-            char rcptfilename[50];
-            sscanf(buffer, "<%[^>]>: %*s", rcptfilename);
-            if (iter != 0)
-            {
-                if (strcmp(last, rcptfilename))
-                {
-                    FileIO::writeToFile(this->rcptUsername, bufferMessages);
-                }
-            }
-            strcpy(last, rcptfilename);
-
-            bufferMessages += buffer;
-            bufferMessages += '\n';
-            this->sendDataOnce(OK);
-        }
-        return true;
     }
+    return true;
+}
 
-    int threadHandler()
-    {
-        // Create send and receive threads
-        std::thread send_thread(&ClientTransaction::sendData, this);
-        std::thread receive_thread(&ClientTransaction::receiveData, this);
+int ClientTransaction::threadHandler()
+{
+    // Create send and receive threads
+    std::thread send_thread(&ClientTransaction::sendData, this);
+    std::thread receive_thread(&ClientTransaction::receiveData, this);
 
-        // Wait for both threads to finish
-        send_thread.join();
-        receive_thread.join();
+    // Wait for both threads to finish
+    send_thread.join();
+    receive_thread.join();
 
-        return 0;
-    }
-};
+    return 0;
+}
+
+
+void ClientTransaction::updateCredentials(char* username, char* password, char* rcptUsername)
+{
+    strcpy(this->username, username);
+    strcpy(this->password, password);
+    strcpy(this->rcptUsername, rcptUsername);
+}

@@ -16,6 +16,10 @@ namespace fs = std::filesystem;
 /////////////////////
 
 
+/*
+ * Class FileIO
+ * Encapsulates methods to handle file IO
+ */
 class FileIO {
 
 public:

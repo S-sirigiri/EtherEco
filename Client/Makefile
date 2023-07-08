@@ -10,7 +10,7 @@ INC = -I${INCDIR}
 SRCFILES := $(wildcard ${SRCDIR}/*.cpp)
 OBJFILES := $(patsubst ${SRCDIR}/%.cpp, ${BUILDDIR}/%.o, ${SRCFILES})
 
-TARGET = server
+TARGET = client
 
 
 

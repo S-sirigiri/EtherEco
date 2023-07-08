@@ -21,7 +21,10 @@
 //ClASS DECLARATIONS//
 /////////////////////
 
-
+/*
+ * Class: SendReceive
+ * Encapsulates methods and attributes to handle socket programing
+ */
 class SendReceive
 {
 protected:
@@ -36,7 +39,10 @@ public:
     int sendDataOnce(char* buffer);
 };
 
-
+/*
+ * Class: ClientTransaction
+ * Encapsulates methods and attributes to facilitate all the client transactions
+ */
 class ClientTransaction : public SendReceive
 {
 private:
@@ -44,7 +50,6 @@ private:
     char* username;
     char* password;
 
-protected:
     void receiveData();
     void sendData();
 
@@ -54,6 +59,7 @@ public:
     bool handshakeTransaction();
     bool fetchBufferMessages();
     int threadHandler();
+    void updateCredentials(char* username, char* password, char* rcptUsername);
 };
 
 #endif /* CLIENT_H */
