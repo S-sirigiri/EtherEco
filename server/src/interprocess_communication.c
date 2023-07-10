@@ -1,15 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#include <mqueue.h>
-#include <string.h>
+#include <interprocess_communication.h>
 
-#define MAX_SIZE 1024
-
-
-int interprocess_shared_memory_send(const char *name, const char *message){
+int interprocess_shared_memory_send(const char *name, const char *message) {
 
     int shm_fd;
     void *ptr;
