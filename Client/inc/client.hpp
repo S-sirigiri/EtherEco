@@ -46,9 +46,9 @@ public:
 class ClientTransaction : public SendReceive
 {
 private:
-    char* rcptUsername;
-    char* username;
-    char* password;
+    char rcptUsername[50];
+    char username[50];
+    char password[50];
 
     void receiveData();
     void sendData();

@@ -2,7 +2,7 @@
 
 void create_tables()
 {
-    PGconn *conn = PQconnectdb("host=<host> port=<port> dbname=<dbname> user=<user> password=<password>");
+    PGconn *conn = PQconnectdb("host=localhost port=5432 dbname=postgres user=postgres password=postgres");
 
     if (PQstatus(conn) != CONNECTION_OK) {
         fprintf(stderr, "Connection to database failed: %s", PQerrorMessage(conn));
@@ -10,14 +10,14 @@ void create_tables()
         return;
     }
 
-    char *query = "CREATE TABLE IF NOT EXISTS users ("
-                  "    username VARCHAR(50) PRIMARY KEY,"
+    char *query = "CREATE TABLE IF NOT EXISTS users ( "
+                  "    username VARCHAR(50) PRIMARY KEY, "
                   "    password VARCHAR(1000) NOT NULL"
                   ");"
-                  "CREATE TABLE IF NOT EXISTS buffer_messages ("
-                  "    username VARCHAR(50) REFERENCES users(username),"
-                  "    rcpt_username VARCHAR(50),"
-                  "    message VARCHAR(2048)"
+                  "CREATE TABLE IF NOT EXISTS buffer_messages ( "
+                  "    username VARCHAR(50) REFERENCES users(username), "
+                  "    rcpt_username VARCHAR(50), "
+                  "    message VARCHAR(2048) "
                   ");";
     PQexec(conn, query);
 
@@ -35,8 +35,8 @@ void add_new_user(char *username, char *password)
     }
 
     char query[MAX_QUERY_SIZE];
-    sprintf(query, "INSERT INTO users"
-                   "VALUES (%s, %s);", username, password);
+    sprintf(query, "INSERT INTO users "
+                   "VALUES (%s, %s); ", username, password);
     PQexec(conn, query);
 
     return;
@@ -53,9 +53,9 @@ int find_username_from_database(char *key, char *username)
     }
 
     char query[MAX_QUERY_SIZE];
-    sprintf(query, "SELECT username"
+    sprintf(query, "SELECT username "
                    "FROM users "
-                   "WHERE username = '%s'", username);
+                   "WHERE username = '%s' ", username);
     PGresult *res = PQexec(conn, query);
 
     if (PQntuples(res) > 0)
@@ -79,9 +79,9 @@ int authenticate_user_from_database(char *username, char *password)
     }
 
     char query[MAX_QUERY_SIZE];
-    sprintf(query, "SELECT password"
+    sprintf(query, "SELECT password "
                    "FROM users "
-                   "WHERE username = '%s'", username);
+                   "WHERE username = '%s' ", username);
     PGresult *res = PQexec(conn, query);
 
     if ( strcmp(PQgetvalue(res, 0, 0), password) == 0 )
@@ -105,14 +105,14 @@ PGresult *get_buffer_messages(char *client_username, char *rcpt_username)
     }
 
     char query[MAX_QUERY_SIZE];
-    sprintf(query, "SELECT messages"
-                   "FROM buffer_messages"
-                   "WHERE username = '%s'"
-                   "ORDER BY rcpt_username", client_username);
+    sprintf(query, "SELECT messages "
+                   "FROM buffer_messages "
+                   "WHERE username = '%s' "
+                   "ORDER BY rcpt_username ", client_username);
     PGresult *res = PQexec(conn, query);
 
-    sprintf(query, "DELETE FROM buffer_messages"
-                   "WHERE username = '%s'", client_username);
+    sprintf(query, "DELETE FROM buffer_messages "
+                   "WHERE username = '%s' ", client_username);
     PQexec(conn, query);
 
     return res;

@@ -86,14 +86,23 @@ void *client_handler(void *arg) {
 	char client_username[BUFFER_SIZE] = "user";
 	char rcpt_username[BUFFER_SIZE] = "user";
 
+    char HELO[] = "HELO";
+    char WHO[] = "WHO";
+    char AUTH[] = "AUTH";
+    char TO[] = "TO";
+    char DATA[] = "DATA";
+    char OK[] = "OK";
+    char DOT[] = ".";
+
+
 	//receiving HELO and sending WHO
-    while ( transact_recv_send_map_reduce(client_socket, strcmp_wrapper, "HELO", "WHO", "403") <= 0 );
+    while ( transact_recv_send_map_reduce(client_socket, strcmp_wrapper, HELO, WHO, "403") <= 0 );
     //receiving client username and sending AUTH
-    while ( transact_recv_send_map_reduce(client_socket, find_username_from_database, client_username, "AUTH", "101") <= 0 );
+    while ( transact_recv_send_map_reduce(client_socket, find_username_from_database, client_username, AUTH, "101") <= 0 );
     //receiving password and sending TO
-    while ( transact_recv_send_map_reduce(client_socket, authenticate_user_from_database, client_username, "TO", "102") <= 0 );
+    while ( transact_recv_send_map_reduce(client_socket, authenticate_user_from_database, client_username, TO, "102") <= 0 );
     //receiving recipient username and sending DATA
-    while ( transact_recv_send_map_reduce(client_socket, find_username_from_database, rcpt_username, "DATA", "101") <= 0 );
+    while ( transact_recv_send_map_reduce(client_socket, find_username_from_database, rcpt_username, DATA, "101") <= 0 );
 
     //send the buffer messages
     PGresult *buffer_messages = get_buffer_messages(client_username, rcpt_username);
@@ -102,11 +111,11 @@ void *client_handler(void *arg) {
     int num_messages = PQntuples(buffer_messages);
     sprintf(str_num_messages, "%d", num_messages);
 
-    while ( transact_send_recv_map_reduce(client_socket, strcmp_wrapper, "OK", str_num_messages, "202") <= 0 );
+    while ( transact_send_recv_map_reduce(client_socket, strcmp_wrapper, OK, str_num_messages, "202") <= 0 );
 
     for (int iter=0; iter < num_messages; iter++)
     {
-        while ( transact_send_recv_map_reduce(client_socket, strcmp_wrapper, "OK", PQgetvalue(buffer_messages, iter, 0), "202") <= 0 );
+        while ( transact_send_recv_map_reduce(client_socket, strcmp_wrapper, OK, PQgetvalue(buffer_messages, iter, 0), "202") <= 0 );
     }
 
     //set the user as online
@@ -158,6 +167,7 @@ void *client_handler(void *arg) {
             break;
         }
     }
+    return (void*) 1;
 }
 
 int main(int argc, char *argv[]) {

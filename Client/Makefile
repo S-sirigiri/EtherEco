@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS =
+CFLAGS = -g -Wall -Werror
 
 SRCDIR := src
 BUILDDIR := build

@@ -81,7 +81,7 @@ int SendReceive::sendDataOnce(char* buffer)
 /*
  * Class constructor
  */
-ClientTransaction::ClientTransaction(char *server_ip, int port,
+ClientTransaction::ClientTransaction(char* server_ip, int port,
                                      char* username, char* password, char* rcptUsername) : SendReceive(server_ip, port)
 {
     //create the directory where all the chats are stored
@@ -132,11 +132,12 @@ void ClientTransaction::receiveData()
 void ClientTransaction::sendData()
 {
     char buffer[BUFLEN];
+    char input[BUFLEN-54];
     while(true)
     {
         std::cout << "<" << this->username << ">: ";
-        std::cin.getline(buffer, BUFLEN);
-        sprintf(buffer, "<%s>: %s", this->username, buffer);
+        std::cin.getline(input, BUFLEN-54);
+        sprintf(buffer, "<%s>: %s", this->username, input);
         if (send(this->sock, buffer, strlen(buffer), 0) < 0)
         {
             std::cerr << "Failed to send the message" << std::endl;
