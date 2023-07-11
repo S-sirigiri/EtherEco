@@ -227,8 +227,7 @@ bool ClientTransaction::fetchBufferMessages()
     int numMessages = 0;
     iss >> numMessages;
 
-    std::string bufferMessages = "";
-    char last[50];
+
     for (int iter=0; iter < numMessages; iter++)
     {
         bytesReceived = receiveDataOnce(buffer);
@@ -236,17 +235,13 @@ bool ClientTransaction::fetchBufferMessages()
 
         char rcptfilename[50];
         sscanf(buffer, "<%[^>]>: %*s", rcptfilename);
-        if (iter != 0)
-        {
-            if (strcmp(last, rcptfilename))
-            {
-                FileIO::writeToFile(this->rcptUsername, bufferMessages);
-            }
-        }
-        strcpy(last, rcptfilename);
 
+        std::string bufferMessages = "";
         bufferMessages += buffer;
         bufferMessages += '\n';
+
+        FileIO::writeToFile(rcptfilename, bufferMessages);
+
         this->sendDataOnce(OK);
     }
     return true;
@@ -254,6 +249,8 @@ bool ClientTransaction::fetchBufferMessages()
 
 int ClientTransaction::threadHandler()
 {
+    FileIO::readFile(this->rcptUsername);
+
     // Create send and receive threads
     std::thread send_thread(&ClientTransaction::sendData, this);
     std::thread receive_thread(&ClientTransaction::receiveData, this);

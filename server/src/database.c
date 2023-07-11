@@ -135,10 +135,10 @@ PGresult *get_buffer_messages(char *client_username, char *rcpt_username)
     }
 
     char query[MAX_QUERY_SIZE];
-    sprintf(query, "SELECT messages "
+    sprintf(query, "SELECT message "
                    "FROM buffer_messages "
-                   "WHERE username = '%s' "
-                   "ORDER BY rcpt_username ", client_username);
+                   "WHERE rcpt_username = '%s' "
+                   "ORDER BY username ", client_username);
     PGresult *res = PQexec(conn, query);
 
     if (PQresultStatus(res) != PGRES_TUPLES_OK) {
@@ -149,7 +149,7 @@ PGresult *get_buffer_messages(char *client_username, char *rcpt_username)
     }
 
     sprintf(query, "DELETE FROM buffer_messages "
-                   "WHERE username = '%s' ", client_username);
+                   "WHERE rcpt_username = '%s' ", client_username);
     PGresult *res2 = PQexec(conn, query);
 
     if (PQresultStatus(res2) != PGRES_COMMAND_OK) {

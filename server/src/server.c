@@ -85,6 +85,7 @@ void *client_handler(void *arg) {
     int client_socket = *((int *)arg);
 	char client_username[BUFFER_SIZE] = "user";
 	char rcpt_username[BUFFER_SIZE] = "user";
+    char temp[BUFFER_SIZE] = "user";
 
     char HELO[] = "HELO";
     char WHO[] = "WHO";
@@ -100,7 +101,9 @@ void *client_handler(void *arg) {
     //receiving client username and sending AUTH
     while ( transact_recv_send_map_reduce(client_socket, find_username_from_database, client_username, AUTH, "101") <= 0 );
     //receiving password and sending TO
+    strcpy(temp, client_username);
     while ( transact_recv_send_map_reduce(client_socket, authenticate_user_from_database, client_username, TO, "102") <= 0 );
+    strcpy(client_username, temp);
     //receiving recipient username and sending DATA
     while ( transact_recv_send_map_reduce(client_socket, find_username_from_database, rcpt_username, DATA, "101") <= 0 );
 
