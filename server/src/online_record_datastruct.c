@@ -94,26 +94,35 @@ Node* deleteNode(Node* root, char* key) {
     if (root == NULL)
         return root;
 
-    if ( strcmp(key, root->key) < 0 )
+    if (strcmp(key, root->key) < 0)
         root->left = deleteNode(root->left, key);
-
-    else if( strcmp(key, root->key) > 0 )
+    else if(strcmp(key, root->key) > 0)
         root->right = deleteNode(root->right, key);
-
     else {
-        if( (root->left == NULL) || (root->right == NULL) ) {
+        if((root->left == NULL) || (root->right == NULL)) {
             Node *temp = root->left ? root->left : root->right;
 
             if(temp == NULL) {
                 temp = root;
                 root = NULL;
-            } else
-                *root = *temp;
+            } else {
+                free(root->key); // free the old key
+                root->key = strdup(temp->key); // duplicate the key
+                root->value = temp->value;
+                root->left = temp->left;
+                root->right = temp->right;
+                root->height = temp->height;
+            }
 
-            free(temp);
+            if(temp != NULL) {
+                free(temp->key);
+                free(temp);
+            }
         } else {
             Node* temp = minValueNode(root->right);
-            root->key = temp->key;
+            free(root->key); // free the old key
+            root->key = strdup(temp->key); // duplicate the key
+            root->value = temp->value;
             root->right = deleteNode(root->right, temp->key);
         }
     }
@@ -129,7 +138,7 @@ Node* deleteNode(Node* root, char* key) {
         return rightRotate(root);
 
     if (balance > 1 && getBalance(root->left) < 0) {
-        root->left =  leftRotate(root->left);
+        root->left = leftRotate(root->left);
         return rightRotate(root);
     }
 
@@ -170,25 +179,21 @@ void preOrder(Node *root) {
     }
 }
 
-int is_online(char *username)
-{
+int is_online(char *username){
+
     Node *found = search(root, username);
-    if (found == NULL)
-    {
+
+    if (found == NULL){
         return -1;
-    }
-    else
-    {
+    } else {
         return found->value;
     }
 }
 
-void set_online(char *username, int socket)
-{
-    insert(root, username, socket);
+void set_online(char *username, int socket) {
+    root = insert(root, username, socket);
 }
 
-void set_offline(char *username)
-{
-    deleteNode(root, username);
+void set_offline(char *username) {
+    root = deleteNode(root, username);
 }

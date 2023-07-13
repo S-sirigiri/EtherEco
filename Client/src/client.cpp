@@ -12,7 +12,7 @@ SendReceive::SendReceive(char *server_ip, int port)
     if (this->sock == -1)
     {
         std::cerr << "Could not create socket" << std::endl;
-        throw std::runtime_error("Failed to create socket");
+        throw std::runtime_error("CreateSocketException");
     }
 
     this->server.sin_addr.s_addr = inet_addr(server_ip);
@@ -23,7 +23,7 @@ SendReceive::SendReceive(char *server_ip, int port)
     if (connect(this->sock, (struct sockaddr *)&server , sizeof(this->server)) < 0)
     {
         std::cerr << "Connect failed" << std::endl;
-        throw std::runtime_error("Failed to connect to server");
+        throw std::runtime_error("SeverConnectionException");
     }
 
     std::cout << "Connected to server" << std::endl;
@@ -45,7 +45,6 @@ SendReceive::~SendReceive()
  */
 int SendReceive::receiveDataOnce(char *data)
 {
-
     char buffer[BUFLEN];
     memset(buffer, 0, BUFLEN);
     //receive data
@@ -53,6 +52,7 @@ int SendReceive::receiveDataOnce(char *data)
     if (received <= 0)
     {
         std::cerr << "Failed to receive or connection closed by server" << std::endl;
+        throw std::runtime_error("ConnectionClosedException");
         return received;
     }
     buffer[received] = '\0';
@@ -106,6 +106,7 @@ void ClientTransaction::receiveData()
         if (received <= 0)
         {
             std::cerr << "Failed to receive or connection closed by server" << std::endl;
+            throw std::runtime_error("ConnectionClosedException");
             break;
         }
         buffer[received] = '\0';
@@ -121,6 +122,9 @@ void ClientTransaction::receiveData()
         {
             FileIO::writeToFile(sentUsername, buffer);
         }
+
+        char OK[] = "OK";
+        this->sendDataOnce(OK);
     }
 }
 
@@ -164,9 +168,18 @@ bool ClientTransaction::handshakeTransaction()
     memset(buffer, '\0', BUFLEN);
     bytesReceived = this->receiveDataOnce(buffer);
     buffer[bytesReceived] = '\0';
+
     if(strcmp(buffer, "WHO"))
     {
         std::cerr << "Failed to receive valid command from server" << std::endl;
+        throw std::runtime_error("FailedHandshakeException");
+        return false;
+    }
+    else if (!strcmp(buffer, "000"))
+    {
+        char DOT[2] = ".";
+        this->sendDataOnce(DOT);
+        throw std::runtime_error("FailedHandshakeException");
         return false;
     }
 
@@ -178,6 +191,14 @@ bool ClientTransaction::handshakeTransaction()
     if(strcmp(buffer, "AUTH"))
     {
         std::cerr << "Failed to receive valid command from server" << std::endl;
+        throw std::runtime_error("FailedHandshakeException");
+        return false;
+    }
+    else if (!strcmp(buffer, "000"))
+    {
+        char DOT[2] = ".";
+        this->sendDataOnce(DOT);
+        throw std::runtime_error("FailedHandshakeException");
         return false;
     }
 
@@ -191,6 +212,13 @@ bool ClientTransaction::handshakeTransaction()
         std::cerr << "Failed to receive valid command from server" << std::endl;
         return false;
     }
+    else if (!strcmp(buffer, "000"))
+    {
+        char DOT[2] = ".";
+        this->sendDataOnce(DOT);
+        throw std::runtime_error("FailedHandshakeException");
+        return false;
+    }
 
     this->sendDataOnce(this->rcptUsername);
 
@@ -200,6 +228,13 @@ bool ClientTransaction::handshakeTransaction()
     if(strcmp(buffer, "DATA"))
     {
         std::cerr << "Failed to receive valid command from server" << std::endl;
+        return false;
+    }
+    else if (!strcmp(buffer, "000"))
+    {
+        char DOT[2] = ".";
+        this->sendDataOnce(DOT);
+        throw std::runtime_error("FailedHandshakeException");
         return false;
     }
 
@@ -225,13 +260,23 @@ bool ClientTransaction::fetchBufferMessages()
     this->sendDataOnce(OK);
     std::istringstream iss(buffer);
     int numMessages = 0;
-    iss >> numMessages;
+    if (!(iss >> numMessages))
+    {
+        throw std::runtime_error("FetchBufferMessagesException");
+        return false;
+    }
 
 
     for (int iter=0; iter < numMessages; iter++)
     {
         bytesReceived = receiveDataOnce(buffer);
         buffer[bytesReceived] = '\0';
+
+        if ( (!strcmp(buffer, "000")) || (!strcmp(buffer, "202")) )
+        {
+            --iter;
+            continue;
+        }
 
         char rcptfilename[50];
         sscanf(buffer, "<%[^>]>: %*s", rcptfilename);
