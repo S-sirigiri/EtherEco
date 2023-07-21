@@ -157,7 +157,8 @@ int thread_handler() {
 }
 
 int num_clients = 0;
-int client_sockets[MAX_CLIENTS];
+int client_sockets[MAX_CLIENTS] = {0};
+pid_t spam_detector_process_ids[NUM_SPAM_DETECTORS] = {0};
 
 
 int run_server()
