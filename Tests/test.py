@@ -1,21 +1,15 @@
-import posix_ipc
+def send(self, message: str) -> None:
+    # Create a new shared memory object
+    memory = posix_ipc.SharedMemory(self.sharedMemoryName, posix_ipc.O_CREAT, size=os.sysconf('SC_PAGE_SIZE'))
 
-# Create the message queue
-mq = posix_ipc.MessageQueue("/test_queue", posix_ipc.O_CREAT )
+    # Map the shared memory
+    mapFile = mmap.mmap(memory.fd, memory.size)
 
-while True:
-    # Receive the message
-    message, priority = mq.receive()
+    # Now that mmap has been created, we can close the memory object's file descriptor
+    memory.close_fd()
 
-    # Decode the message
-    message = message.decode('utf-8')
+    # Write to shared memory
+    mapFile.write(message.encode('utf-8'))
 
-    # Print the message
-    print("Received: " + message)
-
-    # If the message is "exit", break the loop
-    if message.strip() == 'exit':
-        break
-
-# Close the queue
-mq.close()
+    # Close the mapfile. The shared memory segment will persist until it's deleted.
+    mapFile.close()

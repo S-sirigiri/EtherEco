@@ -7,6 +7,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <mqueue.h>
+#include <semaphore.h>
 #include <string.h>
 
 #define MAX_SIZE 1024
@@ -18,7 +19,7 @@
 
 //shared memory
 int interprocess_shared_memory_send(const char *name, const char *message);
-int interprocess_shared_memory_receive(const char *name, char *message);
+int interprocess_shared_memory_receive(const char *name, char *message, const char* sem_name);
 
 //message queues
 mqd_t interprocess_open_message_queue(char * queue_name);

@@ -14,5 +14,4 @@ int main()
     conn.handshakeTransaction();
     conn.fetchBufferMessages();
     conn.threadHandler();
-
 }

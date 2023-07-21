@@ -123,8 +123,8 @@ void ClientTransaction::receiveData()
             FileIO::writeToFile(sentUsername, buffer);
         }
 
-        char OK[] = "OK";
-        this->sendDataOnce(OK);
+        /*char OK[] = "OK";
+        this->sendDataOnce(OK);*/
     }
 }
 
@@ -147,6 +147,7 @@ void ClientTransaction::sendData()
             std::cerr << "Failed to send the message" << std::endl;
             break;
         }
+        FileIO::writeToFile(this->rcptUsername, buffer);
     }
 }
 
