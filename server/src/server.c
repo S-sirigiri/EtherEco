@@ -141,7 +141,7 @@ void handle_clients(int server_socket) {
  * @param   argv    The command-line arguments.
  * @return  An integer representing the status of the function execution. 0 for successful execution, non-zero for error.
  */
-int thread_handler(int argc, char *argv[]) {
+int thread_handler() {
     // Set up a server socket on the specified port
     int server_socket = setup_server_socket(PORT);
     // If the socket setup failed (indicated by a negative return value), return 1 to indicate an error
@@ -160,8 +160,13 @@ int num_clients = 0;
 int client_sockets[MAX_CLIENTS];
 
 
-int main(int argc, char* argv[])
+int run_server()
 {
     signal(SIGINT, signal_handler);
-    thread_handler(argc, argv);
+    thread_handler();
+}
+
+int main()
+{
+    run_server();
 }

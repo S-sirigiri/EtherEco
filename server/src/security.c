@@ -33,6 +33,7 @@ void hash_string(const unsigned char* str, unsigned char* output) {
 }
 
 
+/*
 int main() {
 	//encryption
     unsigned char plaintext[] = "This is a test."; // Multiple of 16 bytes
@@ -59,4 +60,5 @@ int main() {
 
     return 0;
 }
+*/
 

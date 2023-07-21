@@ -4,7 +4,7 @@ CFLAGS = -g
 SRCDIR := src
 BUILDDIR := build
 LIBDIR := lib
-LDFLAGS := -lpq -lrt
+LDFLAGS := -lpq -lrt -lcrypto -lssl
 
 LIBS = -I${LIBDIR}
 SRCFILES := $(wildcard ${SRCDIR}/*.c)

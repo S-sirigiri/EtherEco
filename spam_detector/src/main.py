@@ -3,6 +3,7 @@ from InterprocessCommunication.interprocess_communication import InterprocessCom
 from Classify.classify import SpamPredictor
 
 import sys
+import signal
 
 
 class SpamDetector:
@@ -27,7 +28,15 @@ class SpamDetector:
             labels = self.spamDetector.run([text])
             sm.send(str(labels[0]))
 
+    def sigint_handler(self, signal, frame):
+        self.mq.closeMessageQueue()
+        print("\nReceived SIGINT. Halting process...")
+        sys.exit(0)
+
 
 if __name__ == "__main__":
     sd = SpamDetector(sys.argv[1])
+
+    signal.signal(signal.SIGINT, sd.sigint_handler)
+
     sd.run()
