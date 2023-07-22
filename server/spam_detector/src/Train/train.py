@@ -104,7 +104,7 @@ class SpamDetectorTrainer:
         self.model.fit(self.X_train_seq_padded,
                        self.y_train,
                        validation_data=(self.X_val_seq_padded, self.y_val),
-                       epochs=10000,
+                       epochs=10,
                        verbose=1)
 
     def save_model(self):
@@ -127,5 +127,5 @@ class SpamDetectorTrainer:
 
 if __name__ == "__main__":
     spam_detector_trainer = SpamDetectorTrainer(glove_path='../../Data/glove.twitter.27B/glove.twitter.27B.200d.txt',
-                                                model_path='../../Model_test_run/')
+                                                model_path='../../Model/')
     spam_detector_trainer.train()

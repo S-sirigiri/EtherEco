@@ -23,8 +23,8 @@ int interprocess_shared_memory_receive(const char *name, char *message, const ch
 
 //message queues
 mqd_t interprocess_open_message_queue(char * queue_name);
-int interprocess_message_queue_send(mqd_t mq, char *buffer);
-void interprocess_message_queue_cleanup(mqd_t mq, char *queue_name);
+int interprocess_message_queue_send(char *message_queue_name, char *buffer);
+void interprocess_message_queue_cleanup(char *message_queue_name);
 
 
 

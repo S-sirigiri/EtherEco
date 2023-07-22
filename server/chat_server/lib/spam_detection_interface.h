@@ -1,18 +1,20 @@
 #ifndef SPAM_DETECTION_INTERFACE_H
 #define SPAM_DETECTION_INTERFACE_H
 
+#include <stdio.h>
+#include <time.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include "interprocess_communication.h"
+#include "process_handler.h"
 
 ///////////////////////
 //FUNCTION DECLARATIONS
 ///////////////////////
 
 
-void signal_handler(int signalNumber);
-
-int setup_server_socket(int port);
-void handle_clients(int server_socket);
-int thread_handler();
-int run_server();
-
+int loadbalancer();
+void detect_spam(char *message, char *username, char *rcpt_username);
 
 #endif /* SPAM_DETECTION_INTERFACE_H */

@@ -7,7 +7,7 @@ sys.path.append("../")
 
 from utils.config_reader import read_config_file
 
-maxlen, num_words = read_config_file('../.config/config.json')
+maxlen, num_words = read_config_file('../../.config/config.json')
 
 class SpamPredictor:
     def __init__(self, model_path):

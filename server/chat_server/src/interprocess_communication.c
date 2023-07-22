@@ -1,4 +1,4 @@
-#include <interprocess_communication.h>
+#include "interprocess_communication.h"
 
 /**
  * Sends a message to a shared memory segment.
@@ -134,12 +134,19 @@ mqd_t interprocess_open_message_queue(char * queue_name)
 /**
  * Sends a message to the specified message queue.
  *
- * @param mq - The message queue descriptor (mqd_t).
+ * @param message_queue_name - The message queue name.
  * @param buffer - The buffer containing the message to send.
  * @return 0 if successful, -1 if an error occurs.
  */
-int interprocess_message_queue_send(mqd_t mq, char *buffer)
+int interprocess_message_queue_send(char *message_queue_name, char *buffer)
 {
+    // Open the pre-existing message queue
+    mqd_t mq = mq_open(message_queue_name, O_WRONLY);
+    if(mq == (mqd_t) -1) {
+        perror("mq open failed");
+        return -1;
+    }
+
     /* send the message */
     if (0 > mq_send(mq, buffer, strlen(buffer), 0))
     {
@@ -155,13 +162,19 @@ int interprocess_message_queue_send(mqd_t mq, char *buffer)
 /**
  * Cleans up and closes the specified message queue.
  *
- * @param mq - The message queue descriptor (mqd_t).
- * @param queue_name - The name of the message queue.
+ * @param message_queue_name - The message queue name.
  */
-void interprocess_message_queue_cleanup(mqd_t mq, char *queue_name)
+void interprocess_message_queue_cleanup(char *message_queue_name)
 {
+    // Open the pre-existing message queue
+    mqd_t mq = mq_open(message_queue_name, O_WRONLY);
+    if(mq == (mqd_t) -1) {
+        perror("mq open failed");
+        return;
+    }
+
     // Close the message queue using mq_close()
     mq_close(mq);
     // Unlink (delete) the message queue using mq_unlink()
-    mq_unlink(queue_name);
+    mq_unlink(message_queue_name);
 }

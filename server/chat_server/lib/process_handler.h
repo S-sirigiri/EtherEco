@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <signal.h>
 
+#include "interprocess_communication.h"
+
 #define NUM_SPAM_DETECTORS 5
 
 extern pid_t spam_detector_process_ids[NUM_SPAM_DETECTORS];

@@ -22,6 +22,7 @@ int start_spam_detector_process(const char* argv) {
 /**
  * Starts child processes using fork and executes the spam detector in each child process.
  * The child processes are created to run the spam detector in parallel.
+ * Opens the message queue for that child process i.e., spam detector
  *
  * @return This function has no return value.
  */
@@ -34,6 +35,7 @@ void fork_and_start_multiple_spam_detectors() {
             // Child process
             char message_queue_name[10] = "/mq";
             sprintf(message_queue_name, "%s%d", message_queue_name, iter);
+            interprocess_open_message_queue(message_queue_name);
             start_spam_detector_process(message_queue_name);
         } else if (pid < 0) {
             // Fork failed
@@ -48,6 +50,7 @@ void fork_and_start_multiple_spam_detectors() {
 
 /**
  * Stops all spam detector processes by sending them a SIGINT signal.
+ * Closes the message queue for that spam detector
  *
  * @return This function has no return value.
  */
@@ -59,6 +62,9 @@ void stop_all_spam_detectors() {
         } else {
             perror("kill");
         }
+        char message_queue_name[10] = "/mq";
+        sprintf(message_queue_name, "%s%d", message_queue_name, iter);
+        interprocess_message_queue_cleanup(message_queue_name);
     }
 }
 
