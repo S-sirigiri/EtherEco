@@ -10,8 +10,8 @@ void signal_handler(int signalNumber) {
     // Check if the signal is SIGINT (interrupt signal from keyboard)
     if (signalNumber == SIGINT) {
         printf("\nHalting the server....\n");
-        // Exit the process with a status of 0 (success)
-        exit(0);
+        // Change the state of the flag to stop the running of server
+        keepRunning = 0;
     }
 }
 
@@ -71,7 +71,7 @@ int setup_server_socket(int port) {
  */
 void handle_clients(int server_socket) {
     // Infinite loop to continuously listen for and handle client connections
-    while (1) {
+    while (keepRunning) {
         // Check if the number of currently connected clients is less than the maximum allowed
         if (num_clients < MAX_CLIENTS) {
             // Declare a variable for the client's address and its length
@@ -156,18 +156,35 @@ int thread_handler() {
     return 0;
 }
 
+
+/**
+ * Runs the server, sets up a signal handler for SIGINT, and invokes the thread handler.
+ *
+ * @return Returns 0 if the server ran successfully
+ */
+int run_server()
+{
+    // Set up a signal handler for SIGINT
+    signal(SIGINT, signal_handler);
+
+    // Call the thread_handler function
+    thread_handler();
+
+    return 0;
+}
+
+
 int num_clients = 0;
 int client_sockets[MAX_CLIENTS] = {0};
 pid_t spam_detector_process_ids[NUM_SPAM_DETECTORS] = {0};
-
-
-int run_server()
-{
-    signal(SIGINT, signal_handler);
-    thread_handler();
-}
+volatile sig_atomic_t keepRunning = 1;
 
 int main()
 {
+    fork_and_start_multiple_spam_detectors();
     run_server();
+    stop_all_spam_detectors();
+    wait_for_child_processes();
+
+    return 0;
 }

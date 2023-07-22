@@ -7,11 +7,11 @@
  * @param argv The argument to be passed to the Python script.
  * @return Returns 0 if the execution is successful, -1 if there's an error.
  */
-int start_spam_detector(const char* argv) {
+int start_spam_detector_process(const char* argv) {
     // Use execlp to start the spam detector
-    if(execlp("python", "python", "../../spam_detector/src/main.py", argv, (char *) NULL) == -1){
+    if(execlp("python", "python", "../spam_detector/src/main.py", argv, (char *) NULL) == -1){
         // Check for error
-        fprintf(stderr, "execlp : python ../../spam_detector/src/main.py %s", argv);
+        fprintf(stderr, "execlp : python ../spam_detector/src/main.py %s", argv);
         // Return -1 to indicate an error
         return -1;
     }
@@ -25,7 +25,7 @@ int start_spam_detector(const char* argv) {
  *
  * @return This function has no return value.
  */
-void start_child_processes() {
+void fork_and_start_multiple_spam_detectors() {
     // Loop to create child processes
     for (int iter = 0; iter < NUM_SPAM_DETECTORS; iter++) {
         pid_t pid = fork();
@@ -34,7 +34,7 @@ void start_child_processes() {
             // Child process
             char message_queue_name[10] = "/mq";
             sprintf(message_queue_name, "%s%d", message_queue_name, iter);
-            start_spam_detector(message_queue_name);
+            start_spam_detector_process(message_queue_name);
         } else if (pid < 0) {
             // Fork failed
             perror("fork");

@@ -2,8 +2,11 @@
 #define SERVER_H
 
 #include "client_handling.h"
+#include "process_handler.h"
 #include <pthread.h>
 #include <signal.h>
+
+extern volatile sig_atomic_t keepRunning;
 
 ///////////////////////
 //FUNCTION DECLARATIONS

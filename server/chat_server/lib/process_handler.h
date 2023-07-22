@@ -14,8 +14,8 @@ extern pid_t spam_detector_process_ids[NUM_SPAM_DETECTORS];
 //FUNCTION DECLARATIONS
 ///////////////////////
 
-int start_spam_detector(const char* argv);
-void start_child_processes();
+int start_spam_detector_process(const char* argv);
+void fork_and_start_multiple_spam_detectors();
 void stop_all_spam_detectors();
 void wait_for_child_processes();
 
