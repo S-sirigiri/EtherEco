@@ -1,0 +1,119 @@
+<!-- chat_app.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App - EtherEco</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        .navbar {
+            background: #1a202c;
+        }
+        .navbar-brand {
+            color: #f4f4f4;
+        }
+        .navbar-nav .nav-link {
+            color: #a0aec0;
+        }
+        .chat-container {
+            display: flex;
+            height: calc(100vh - 56px);
+        }
+        .chat-recipient {
+            flex: 1;
+            padding: 15px;
+            border-right: 1px solid #ddd;
+        }
+        .chat-window {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .chat-input {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-input .form-control {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+    window.onload = function() {
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        document.getElementById('updateRecipientButton').addEventListener('click', function() {
+            var recipient = document.getElementById('recipientInput').value;
+            socket.emit('updateRecipient', recipient);
+            document.getElementById('chatMessages').innerHTML = '';  // clear the chat window
+        });
+
+        socket.on('connect', function() {
+            console.log('Websocket connected!');
+
+            // When 'newmessage' event occurs, append it to the chat
+            socket.on('newmessage', function(msg) {
+                document.getElementById('chatMessages').innerHTML += "<li>" + msg + "</li>";
+            });
+
+            // Event when Send button is clicked
+            document.getElementById('sendMessageButton').addEventListener('click', function() {
+                var recipient = document.getElementById('recipientInput').value.trim();
+                var message = document.getElementById('chatInput').value.trim();
+                if (recipient.length > 0 && message.length > 0) {
+                    socket.emit('sendmessage', { 'recipient': recipient, 'message': message });
+                }
+                document.getElementById('chatInput').value = ''; // clear the input field
+                return false; // prevent the form submission
+            });
+        });
+    }
+</script>
+
+<nav class="navbar navbar-expand-lg navbar-dark">
+        <a class="navbar-brand" href="#">EtherEco</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/signout">Sign Out</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="chat-container">
+        <div class="chat-recipient d-flex justify-content-center align-items-center">
+            <input type="text" class="form-control mr-2" id="recipientInput" placeholder="Enter recipient's username">
+            <button class="btn btn-primary" id="updateRecipientButton">Update Recipient</button>
+        </div>
+
+
+        <div class="chat-window">
+            <div class="chat-messages" id="chatMessages">
+                <!-- Chat messages populated by JavaScript -->
+            </div>
+            <div class="chat-input">
+                <input type="text" class="form-control" id="chatInput" placeholder="Type a message">
+                <button class="btn btn-primary" id="sendMessageButton">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

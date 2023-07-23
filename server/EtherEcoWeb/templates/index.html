@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EtherEco</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            background: #f4f4f4;
+        }
+        .navbar {
+            background: #1a202c;
+        }
+        .navbar-brand {
+            color: #f4f4f4;
+        }
+        .navbar-nav .nav-link {
+            color: #a0aec0;
+        }
+        .landing-header {
+            margin-top: 10%;
+            text-align: center;
+        }
+        .btn-signup {
+            background: #38a169;
+            color: #f4f4f4;
+        }
+        .btn-signin {
+            background: #4299e1;
+            color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <a class="navbar-brand" href="#">EtherEco</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/signin">Sign In</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/signup">Sign Up</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/about">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/chat">Chat</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="landing-header">
+        <h1>Welcome to EtherEco</h1>
+        <p>Connecting Minds, Openly and Freely - Your Open Source Chatting Universe!.</p>
+        <a href="/signup" class="btn btn-lg btn-signup">Sign Up</a>
+        <a href="/signin" class="btn btn-lg btn-signin">Sign In</a>
+    </header>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>
+
