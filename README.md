@@ -2,7 +2,7 @@
 
 An open source chatting platform for linux.
 
-##Features
+## Features
   - End to end encryption
   - Spam Detection
   - Users can use the locally installed application or the web version
