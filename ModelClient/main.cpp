@@ -17,6 +17,23 @@ std::shared_ptr<Gtk::Button> pSendButton;
 void load_chat_window();
 
 void on_button_signin_clicked() {
+
+    Glib::RefPtr<Gtk::Builder> refBuilderSignIn = Gtk::Builder::create();
+    try {
+        refBuilderSignIn->add_from_file("signin.glade");
+    }
+    catch(const Glib::FileError& ex) {
+        std::cerr << "FileError: " << ex.what() << std::endl;
+        return;
+    }
+
+
+    auto signInUsernameEntry = dynamic_cast<Gtk::Entry*>(refBuilderSignIn->get_object("entry_username").operator->());
+    auto signInPasswordEntry = dynamic_cast<Gtk::Entry*>(refBuilderSignIn->get_object("entry_password").operator->());
+    std::string signin_username = signInUsernameEntry->get_text();
+    std::string signin_password = signInPasswordEntry->get_text();
+    std::cout << "Sign In - Username: " << signin_username << ", Password: " << signin_password << std::endl;
+
     auto refBuilder = Gtk::Builder::create();
 
     try {
@@ -39,6 +56,25 @@ void on_button_signin_clicked() {
 }
 
 void on_button_signup_clicked() {
+
+    Glib::RefPtr<Gtk::Builder> refBuilderSignUp = Gtk::Builder::create();
+    try {
+        refBuilderSignUp->add_from_file("signup.glade");
+    }
+    catch(const Glib::FileError& ex) {
+        std::cerr << "FileError: " << ex.what() << std::endl;
+        return;
+    }
+
+
+    auto signUpUsernameEntry = dynamic_cast<Gtk::Entry*>(refBuilderSignUp->get_object("entry_username").operator->());
+    auto signUpPasswordEntry = dynamic_cast<Gtk::Entry*>(refBuilderSignUp->get_object("entry_password").operator->());
+    auto signUpConfirmPasswordEntry = dynamic_cast<Gtk::Entry*>(refBuilderSignUp->get_object("entry_confirm_password").operator->());
+    std::string signup_username = signUpUsernameEntry->get_text();
+    std::string signup_password = signUpPasswordEntry->get_text();
+    std::string signup_confirm_password = signUpConfirmPasswordEntry->get_text();
+    std::cout << "Sign Up - Username: " << signup_username << ", Password: " << signup_password << ", Confirm Password: " << signup_confirm_password << std::endl;
+
     auto refBuilder = Gtk::Builder::create();
 
     try {
@@ -74,6 +110,9 @@ void on_send_button_clicked() {
     Glib::ustring message = pUsernameEntry->get_text() + ": " + pMessageEntry->get_text() + "\n";
     buffer->insert(buffer->end(), message);
     pMessageEntry->set_text("");  // Clear the message entry.
+
+    // do whatever you want with the message
+    // some_func(message);
 }
 
 int main(int argc, char *argv[]) {
@@ -158,4 +197,3 @@ void load_chat_window() {
     // Show the chat window.
     pWindowChat->show_all();
 }
-
